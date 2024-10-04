@@ -12,7 +12,7 @@ const rand = (min, max) => {
 async function main() {
   const adapter = await navigator.gpu?.requestAdapter();
   const device = await adapter?.requestDevice();
-  const numParticles = 1000000;
+  const numParticles = 100000;
   if (!device) {
     fail('need a browser that supports WebGPU');
     return;
