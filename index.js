@@ -12,7 +12,7 @@ const rand = (min, max) => {
 async function main() {
   const adapter = await navigator.gpu?.requestAdapter();
   const device = await adapter?.requestDevice();
-  const numParticles = 100000;
+  const numParticles = 500000;
   if (!device) {
     fail('need a browser that supports WebGPU');
     return;
@@ -21,6 +21,7 @@ async function main() {
   // Get a WebGPU context from the canvas and configure it
   const canvas = document.querySelector('canvas');
   resizeCanvas();
+    
   const context = canvas.getContext('webgpu');
   const presentationFormat = navigator.gpu.getPreferredCanvasFormat();
   context.configure({
@@ -197,15 +198,16 @@ async function main() {
   @compute @workgroup_size(${workgroupSize}) fn computeData(
       @builtin(global_invocation_id) global_invocation_id : vec3<u32>
   ) {
-    particleData[global_invocation_id.x].pos += particleVel[global_invocation_id.x].vel.xy/100;
+    particleData[global_invocation_id.x].pos += particleVel[global_invocation_id.x].vel.xy/1000;
     particleVel[global_invocation_id.x].vel += vec4f(-(2*particleData[global_invocation_id.x].pos - vec2f(1f)), length(particleVel[global_invocation_id.x].vel.xy) , particleVel[global_invocation_id.x].vel.w + 0.1f);
     particleVel[global_invocation_id.x].vel/=1.5f;
-    particleData[global_invocation_id.x].color = vec4f(normalize(particleVel[global_invocation_id.x].vel.xy), 0.5, 1);
-    if(length(particleVel[global_invocation_id.x].vel.xy) < 0.1f)
+    //particleData[global_invocation_id.x].color = vec4f(normalize(particleVel[global_invocation_id.x].vel.xy), 0.5, 1);
+    let seed = f32(global_invocation_id.x);
+    if(length(particleVel[global_invocation_id.x].vel.xy) < 2*fract(sin(seed)*1000000.0))
     {
-      let seed = f32(global_invocation_id.x);
-      particleVel[global_invocation_id.x].vel.x += (cos(seed)) * 25; //(fract(sin(seed)*1000000.0)-0.5) * 50;
-      particleVel[global_invocation_id.x].vel.y += (sin(seed)) * 25; //(fract(sin(seed)*100000.0)-0.5) * 50;
+      
+      particleVel[global_invocation_id.x].vel.x += (cos(seed)) * 50; //(fract(sin(seed)*1000000.0)-0.5) * 500;
+      particleVel[global_invocation_id.x].vel.y += (sin(seed)) * 50; //(fract(sin(seed)*100000.0)-0.5) * 500;
     }
   }
   `;
@@ -262,6 +264,8 @@ async function main() {
     
     requestAnimationFrame(render);
   }
+
+  render();
     
   function resizeCanvas() {
     var newWidth = window.innerWidth;
@@ -293,5 +297,3 @@ function fail(msg) {
 
 main();
   
-
-
