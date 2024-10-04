@@ -12,7 +12,7 @@ const rand = (min, max) => {
 async function main() {
   const adapter = await navigator.gpu?.requestAdapter();
   const device = await adapter?.requestDevice();
-  const numParticles = 50000;
+  const numParticles = 100000;
   if (!device) {
     fail('need a browser that supports WebGPU');
     return;
@@ -62,8 +62,9 @@ async function main() {
   let seed = f32(global_invocation_id.x);
     particleData[global_invocation_id.x].pos[0] = fract(sin(seed)*1000000.0);
     particleData[global_invocation_id.x].pos[1] = fract(sin(seed*10)*10000.0);
-    particleData[global_invocation_id.x].color = vec4(particleData[global_invocation_id.x].pos,
+    particleData[global_invocation_id.x].color = vec4(0.8, 0.4,
                                                         fract(sin(seed*3+2)*30000.0), 0.1);
+    particleData[global_invocation_id.x].pos = 10* (particleData[global_invocation_id.x].pos - vec2f(0.5, 0.5));                             
     particleVel[global_invocation_id.x].vel = vec4f(-particleData[global_invocation_id.x].pos, 0, 0);
   }
   `;
@@ -124,15 +125,8 @@ async function main() {
         @builtin(vertex_index) vertexIndex : u32,
         @builtin(instance_index) instanceIndex: u32
       ) -> VertexShaderOutput {
-
-        let pos = array(
-          vec2f( 0.0,  0.05),  // top center
-          vec2f(-0.05, -0.05),  // bottom left
-          vec2f( 0.05, -0.05)   // bottom right
-        );
-
         var vsOut : VertexShaderOutput;
-        let oPos = pos[vertexIndex]+ (2*particleData[instanceIndex].pos) - vec2f(1.f, 1.f);
+        let oPos = particleData[instanceIndex].pos; // (2*particleData[instanceIndex].pos) - vec2f(1.f, 1.f);
         vsOut.position = vec4f(oPos, 0, 1);
         
         vsOut.color = particleData[instanceIndex].color;
@@ -199,15 +193,16 @@ async function main() {
       @builtin(global_invocation_id) global_invocation_id : vec3<u32>
   ) {
     particleData[global_invocation_id.x].pos += particleVel[global_invocation_id.x].vel.xy/1000;
-    particleVel[global_invocation_id.x].vel += vec4f(-(2*particleData[global_invocation_id.x].pos - vec2f(1f)), length(particleVel[global_invocation_id.x].vel.xy) , particleVel[global_invocation_id.x].vel.w + 0.1f);
+    let t = particleVel[global_invocation_id.x].vel.w/3600 * 3.14;
+    particleVel[global_invocation_id.x].vel += 10 * vec4f(-0.5-(2*particleData[global_invocation_id.x].pos - vec2f(1f)), length(particleVel[global_invocation_id.x].vel.xy) , particleVel[global_invocation_id.x].vel.w%3600 + 0.1);
     particleVel[global_invocation_id.x].vel/=1.5f;
     //particleData[global_invocation_id.x].color = vec4f(normalize(particleVel[global_invocation_id.x].vel.xy), 0.5, 1);
     let seed = f32(global_invocation_id.x);
-    if(length(particleVel[global_invocation_id.x].vel.xy) < 2*fract(sin(seed)*1000000.0))
+    if(length(particleVel[global_invocation_id.x].vel.xy) < 10.f)
     {
       
-      particleVel[global_invocation_id.x].vel.x += (cos(seed)) * 50; //(fract(sin(seed)*1000000.0)-0.5) * 500;
-      particleVel[global_invocation_id.x].vel.y += (sin(seed)) * 50; //(fract(sin(seed)*100000.0)-0.5) * 500;
+      particleVel[global_invocation_id.x].vel.x = (cos(t + seed)) * seed; //(fract(sin(seed)*1000000.0)-0.5) * 500;
+      particleVel[global_invocation_id.x].vel.y = (sin(t + seed)) * seed; //(fract(sin(seed)*100000.0)-0.5) * 500;
     }
   }
   `;
@@ -255,7 +250,7 @@ async function main() {
       const pass = encoder.beginRenderPass(renderPassDescriptor);
       pass.setPipeline(pipeline);
       pass.setBindGroup(0, bindGroup);
-      pass.draw(3, numParticles, 0, 0);
+      pass.draw(1, numParticles, 0, 0);
       pass.end();
     }
 
@@ -264,9 +259,8 @@ async function main() {
     
     requestAnimationFrame(render);
   }
-
-  render();
     
+    requestAnimationFrame(render);
   function resizeCanvas() {
     var newWidth = window.innerWidth;
 
