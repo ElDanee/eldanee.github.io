@@ -20,6 +20,7 @@ async function main() {
 
   // Get a WebGPU context from the canvas and configure it
   const canvas = document.querySelector('canvas');
+  resizeCanvas();
   const context = canvas.getContext('webgpu');
   const presentationFormat = navigator.gpu.getPreferredCanvasFormat();
   context.configure({
@@ -261,8 +262,28 @@ async function main() {
     
     requestAnimationFrame(render);
   }
+    
+  function resizeCanvas() {
+    var newWidth = window.innerWidth;
 
-  render();
+    if (canvas.width == newWidth) {
+        return;
+    }
+
+    canvas.width = newWidth;
+    canvas.height = window.innerHeight;
+  }
+    
+    // Resize the canvas to fill window dynamically
+    window.addEventListener('resize', resizeCanvas, false);
+    window.addEventListener('orientationchange', resizeCanvas, false);
+
+    // Start animation after DOM is loaded
+    window.addEventListener('DOMContentLoaded', function () {
+        resizeCanvas();
+        requestAnimationFrame(render);
+    }, false);
+
 }
 
 function fail(msg) {
