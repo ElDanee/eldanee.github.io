@@ -363,8 +363,8 @@ const numParticlesMax = 100000;
 			let duration = 250 + 100*Math.random();
 			let direction = [Math.random()-0.5,1,0];
 			for (var i = 0; i < 50; i++){
-				let particle = createParticle([(thouches[t].pageX/canvas.width - 0.5) * 2,
-																			 (thouches[t].pageY/canvas.height - 0.5) * -2,
+				let particle = createParticle([(thouches[t].clientX/canvas.width - 0.5) * 2,
+																			 (thouches[t].clientY/canvas.height - 0.5) * -2,
 																			 0.1],
 																			0.3 + Math.random(),
 																			[Math.random(),Math.random(),Math.random(),1],
