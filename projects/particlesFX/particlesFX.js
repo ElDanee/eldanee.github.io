@@ -354,8 +354,31 @@ const numParticlesMax = 100000;
 			particlesToCopy += 1;
 		}
 	}
+	
+	function handleTouchPos(e){
+		const touches = evt.changedTouches;
+		for (var t = 0; t<touches.length; t++){
+			let speed = 0.01 + Math.random()/1000;
+			let duration = 250 + 100*Math.random();
+			let direction = [Math.random()-0.5,1,0];
+			for (var i = 0; i < 50; i++){
+				let particle = createParticle([(thouches[t].pageX/canvas.width - 0.5) * 2,
+																			 (thouches[t].pageY/canvas.height - 0.5) * -2,
+																			 0.1],
+																			0.3 + Math.random(),
+																			[Math.random(),Math.random(),Math.random(),1],
+																			direction,
+																			speed,
+																			duration,
+																			[1,1,1]);
+				stagingParticlesBuffer.set(toF32(particle), particlesToCopy * particleSize/4);
+				particlesToCopy += 1;
+			}
+		}
+	}
+	
 	canvas.addEventListener("click", getMousePos);
-	canvas.addEventListener("touchend", getMousePos);
+	canvas.addEventListener("touchend", handleTouchPos);
 	
 	let depthTexture;
 	
