@@ -77,6 +77,7 @@ const numParticlesMax = 100000;
 
 			@vertex fn vs(vert: Vertex, @builtin(instance_index) instanceIndex: u32, @builtin(vertex_index) vertexIndex: u32) -> VSOutput {
 				var vsOut: VSOutput;
+				_ = u_time; //placeholder, either remove u_time, use it or change 'auto' layout in pipeline creation!
 				vsOut.p_center = particles[instanceIndex].position.xy;
 				vsOut.position = vec4f(particles[instanceIndex].size * vert.pos/100 + vsOut.p_center, 0, 1.f);
 				vsOut.uv_coord = vec2f(vsOut.position.xy);
