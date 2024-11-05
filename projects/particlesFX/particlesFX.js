@@ -356,7 +356,8 @@ const numParticlesMax = 100000;
 	}
 	
 	function handleTouchPos(e){
-		const touches = evt.changedTouches;
+		e.preventDefault();
+		const touches = e.changedTouches;
 		for (var t = 0; t<touches.length; t++){
 			let speed = 0.01 + Math.random()/1000;
 			let duration = 250 + 100*Math.random();
