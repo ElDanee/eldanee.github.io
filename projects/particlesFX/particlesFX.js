@@ -378,7 +378,7 @@ const numParticlesMax = 100000;
 	}
 	
 	canvas.addEventListener("click", getMousePos);
-	canvas.addEventListener("touchend", handleTouchPos);
+	canvas.addEventListener("touchstart", handleTouchPos);
 	
 	let depthTexture;
 	
