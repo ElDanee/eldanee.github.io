@@ -355,6 +355,7 @@ const numParticlesMax = 100000;
 		}
 	}
 	canvas.addEventListener("click", getMousePos);
+	canvas.addEventListener("ontouchend", getMousePos);
 	
 	let depthTexture;
 	
