@@ -105,13 +105,13 @@ fn random2( p : vec2f ) -> f32 {
     // Show isolines
     //oColor -= step(.7,abs(sin(27.0*m_dist)))*.5;
     
-    return vec4f(oColor,1.0);
+    return vec4f(2*oColor,1.0);
   }
     `,
   });
     
   const pipeline = device.createRenderPipeline({
-    label: 'our hardcoded red triangle pipeline',
+    label: 'triangle pipeline',
     layout: 'auto',
     vertex: {
       module,
@@ -124,7 +124,7 @@ fn random2( p : vec2f ) -> f32 {
     
     const uniformBufferSize = 4; // one float for time uniform
     const uniformResolutionBufferSize = 8; //one vector for resolution ( 2 floats)
-    const uniformScrollBufferSize = 4;
+    const uniformScrollBufferSize = 4; //float to check page position
       
       const uniformBuffer = device.createBuffer({
         size: uniformBufferSize,
@@ -151,7 +151,7 @@ fn random2( p : vec2f ) -> f32 {
      });
 
   const renderPassDescriptor = {
-    label: 'our basic canvas renderPass',
+    label: 'renderPass',
     colorAttachments: [
       {
         clearValue: [0.3, 0.3, 0.3, 1],
@@ -189,7 +189,7 @@ fn random2( p : vec2f ) -> f32 {
         renderPassDescriptor.colorAttachments[0].view =
             context.getCurrentTexture().createView();
 
-        const encoder = device.createCommandEncoder({ label: 'our encoder' });
+        const encoder = device.createCommandEncoder({ label: 'encoder' });
         const pass = encoder.beginRenderPass(renderPassDescriptor);
             
         pass.setPipeline(pipeline);

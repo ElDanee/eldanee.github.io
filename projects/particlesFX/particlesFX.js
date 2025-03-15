@@ -249,13 +249,13 @@ const numParticlesMax = 100000;
  
 	fn hashFtoVec2(seed : f32) -> vec2f{
 		let x = fract(sin((seed + 777) * 3456789.357f) * 10000.f);
-		let y = fract(sin((seed + 42) * 9876543.21f + 42) * 1000.f);
+		let y = fract(sin((seed + 42) * 9876543.21f) * 1000.f);
 		return vec2f(x,y);
 	}
 
 	fn hashFtoVec2Polar(seed : f32) -> vec2f{
-		let r = fract(sin((seed + 777) * 3456789.357f) * 10000.f);
-		let theta = fract(sin((seed + 42) * 9876543.21f + 42) * 1000.f) * 6.28;
+		let r = fract(sin((seed*10 + 777) * 3456789.357f) * 10000.f);
+		let theta = fract(sin((seed*10 + 42) * 9876543.21f) * 1000.f) * 6.28;
 		return r *vec2f(cos(theta),sin(theta));
 	}
 
@@ -337,21 +337,23 @@ const numParticlesMax = 100000;
 	var particlesToCopy = 0;
 
 	function getMousePos(e){
-		let speed = 0.01 + Math.random()/1000;
-		let duration = 250 + 100*Math.random();
-		let direction = [Math.random()-0.5,1,0];
-		for (var i = 0; i < 100; i++){
-			let particle = createParticle([(e.clientX/canvas.width - 0.5) * 2,
-																		 (e.clientY/canvas.height - 0.5) * -2,
-																		 0.1],
-																		0.3 + Math.random(),
-																		[Math.random(),Math.random(),Math.random(),1],
-																		direction,
-																		speed,
-																		duration,
-																		[1,1,1]);
-			stagingParticlesBuffer.set(toF32(particle), particlesToCopy * particleSize/4);
-			particlesToCopy += 1;
+		for (var t = 0; t<50; t++){
+			let speed = 0.01 + Math.random()/1000;
+			let duration = 250 + 100*Math.random();
+			let direction = [Math.random()-0.5,1,0];
+			for (var i = 0; i < 100; i++){
+				let particle = createParticle([(e.clientX/canvas.width - 0.5) * 2,
+																			 (e.clientY/canvas.height - 0.5) * -2,
+																			 0.1],
+																			0.3 + Math.random(),
+																			[Math.random(),Math.random(),Math.random(),1],
+																			direction,
+																			speed,
+																			duration,
+																			[1,1,1]);
+				stagingParticlesBuffer.set(toF32(particle), particlesToCopy * particleSize/4);
+				particlesToCopy += 1;
+			}
 		}
 	}
 	
@@ -363,8 +365,8 @@ const numParticlesMax = 100000;
 			let duration = 250 + 100*Math.random();
 			let direction = [Math.random()-0.5,1,0];
 			for (var i = 0; i < 50; i++){
-				let particle = createParticle([(thouches[t].clientX/canvas.width - 0.5) * 2,
-																			 (thouches[t].clientY/canvas.height - 0.5) * -2,
+				let particle = createParticle([(thouches[0].clientX/canvas.width - 0.5) * 2,
+																			 (thouches[0].clientY/canvas.height - 0.5) * -2,
 																			 0.1],
 																			0.3 + Math.random(),
 																			[Math.random(),Math.random(),Math.random(),1],
