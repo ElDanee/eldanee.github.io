@@ -7,10 +7,10 @@ async function main() {
     
   const numParticles = 100000;
     if (!device) {
-      fail('It seems your web browser doesn\'t support WebGPU :( \n \
-            Some features in my portfolio won\'t be available.');
-      resizeCanvas();
-      return;
+        fail('It seems WebGPU isn\'t enabled on your browser or your GPu doesn\'t support it :( \n \
+              Some features in my portfolio won\'t be available.');
+        resizeCanvas();
+        return;
     }
 
   // Get a WebGPU context from the canvas and configure it
@@ -47,19 +47,26 @@ async function main() {
       vel : vec4f //w is time
     };
   
-  @group(0) @binding(0) var<storage, read_write> particleData: array<ParticleData>;
-  @group(0) @binding(1) var<storage, read_write> particleVel: array<ParticleVelocity>;
+        fn hashFtoVec2Polar(seed : f32) -> vec2f{
+            let r = fract(sin((seed * 10) * 3456789.357f) * 10000.f);
+            let theta = fract(sin((seed * 10) * 9876543.21f) * 100.f) * 6.28;
+            return r *vec2f(cos(theta),sin(theta));
+        }
+  
+    @group(0) @binding(0) var<storage, read_write> particleData: array<ParticleData>;
+    @group(0) @binding(1) var<storage, read_write> particleVel: array<ParticleVelocity>;
 
-  @compute @workgroup_size(${workgroupSize}) fn computeData(
+    @compute @workgroup_size(${workgroupSize}) fn computeData(
       @builtin(global_invocation_id) global_invocation_id : vec3<u32>
-  ) {
-  let seed = f32(global_invocation_id.x);
-    particleData[global_invocation_id.x].pos[0] = 2* (fract(sin(seed)*1000000.0) - 0.5);
-    particleData[global_invocation_id.x].pos[1] = 2* (fract(sin(seed*10)*10000.0) - 0.5);
-    particleData[global_invocation_id.x].color = vec4(0.8, 0.4,
-                                                        fract(sin(seed*3+2)*30000.0), 0.1);                           
-    particleVel[global_invocation_id.x].vel = vec4f(0);
-  }
+    ) {
+        let seed = f32(100*global_invocation_id.x);
+        particleData[global_invocation_id.x].pos = hashFtoVec2Polar(seed);
+       // particleData[global_invocation_id.x].pos[0] = 2* (fract(sin(seed)*1000000.0) - 0.5);
+        //particleData[global_invocation_id.x].pos[1] = 2* (fract(sin(seed*10)*10000.0) - 0.5);
+        particleData[global_invocation_id.x].color = vec4(0.8, 0.4,
+                                                            fract(sin(seed*3+2)*30000.0), 0.1);                           
+        particleVel[global_invocation_id.x].vel = vec4f(0);
+    }
   `;
 
   const initModule = device.createShaderModule({
@@ -159,7 +166,7 @@ async function main() {
     label: 'our basic canvas renderPass',
     colorAttachments: [
       {
-        clearValue: [0.3, 0.3, 0.3, 1],
+        clearValue: [0.1, 0.1, 0.1, 1],
         loadOp: 'clear',
         storeOp: 'store',
       },

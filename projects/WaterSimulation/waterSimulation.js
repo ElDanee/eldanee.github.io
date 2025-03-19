@@ -348,7 +348,7 @@ class WaterSurface{
         this.heights.fill(depth);
         this.velocities.fill(0.0);
         
-        this.heights[(this.numX-1) * this.numX] = 100; //Init wave
+        this.heights[this.numCells-1] = 100; //Init wave
         
         this.positions = new Float32Array(this.numCells * 2);
         let cx = Math.floor(this.numX / 2.0);
@@ -388,8 +388,8 @@ async function main() {
     const adapter = await navigator.gpu?.requestAdapter();
     const device = await adapter?.requestDevice();
     if (!device) {
-        fail('It seems your web browser doesn\'t support WebGPU :( \n \
-                    Some features in my portfolio won\'t be available.');
+        fail('It seems WebGPU isn\'t enabled on your browser or your GPu doesn\'t support it :( \n \
+              This demo isn\'t available without WebGPU, feel free to check out to Github page!');
         resizeCanvas();
         return;
     }
@@ -402,7 +402,7 @@ async function main() {
         alphaMode: 'premultiplied',
     });
     
-    var waterSurface = new WaterSurface(surfaceSide, depthVal, .3);
+    var waterSurface = new WaterSurface(surfaceSide, depthVal, .2);
     
     //Surface mesh init
     const vertexBuffer = device.createBuffer({
@@ -635,8 +635,8 @@ async function main() {
 
     for (var t = 0; t<numParticlesMax; t++){ //Init strating particles
         let velocity = [0, Math.random() * -10, 0];
-        let position = [Math.random() * (surfaceSide/2) + (surfaceSide/10), Math.random() * (surfaceSide) - surfaceSide/2];
-        let height = Math.random() * 2000 + 100;
+        let position = [Math.random() * (surfaceSide) - (surfaceSide/2), Math.random() * (surfaceSide) - surfaceSide/10];
+        let height = Math.random() * 1000 + 100;
         let color = [1,1,1];
         let size = 2;
         let particleData = new ParticleData(position, height, size, color);
@@ -745,10 +745,12 @@ async function main() {
             
             @group(0) @binding(0) var<storage> heights: array<f32>;
             @group(0) @binding(1) var<uniform> u_viewProjection : mat4x4f;
+            @group(0) @binding(2) var<uniform> u_eyePosition : vec3f;
         
             const stride : u32 = ${waterSurface.numX};
             const numValues : u32 = ${waterSurface.numCells};
             const spacing : f32 = ${waterSurface.spacing};
+            const lightPosition : vec3f = vec3f(1000, 0, -100);
 
             @vertex fn vs(vert: Vertex, @builtin(vertex_index) vertexIndex: u32) -> VSOutput {
                 var vsOut: VSOutput;
@@ -763,7 +765,7 @@ async function main() {
                 var v2 : vec3f;
                 var v3 : vec3f;
                 var v4 : vec3f;
-                if(vertexIndex%(stride-1)!=0){
+                if((vertexIndex-1)%(stride)!=0){
                     v1 = vec3f(vert.pos.x+spacing, heights[vertexIndex+1], vert.pos.y);
                 } else {v1 = v0;}
                 if(vertexIndex%(stride)!=0){
@@ -785,12 +787,14 @@ async function main() {
             }
 
             @fragment fn fs(vsOut: VSOutput) -> @location(0) vec4f {
-                ///TODO: add reflection
-                var L = normalize(vec3f(0, 100, 0) - vsOut.position.xyz); 
+                var L = normalize(lightPosition - vsOut.position.xyz); 
+                let R = 2 * dot(L, vsOut.normal) * vsOut.normal - L;
+                let eyeDir = normalize(u_eyePosition - vsOut.position.xyz);
+                let colorS = pow(max(dot(eyeDir, R), 0.f), 200.f);
         
                 var s = max(dot(vsOut.normal,L), .1); 
-                var color = vsOut.color.xyz * (0.5 + 0.5 * s);
-                return vec4f(color, 1f);
+                var color = vsOut.color.xyz * (0.3 + 0.7 * s);
+                return vec4f(0.9*color + 0.7*colorS, .8f);
             }
         `,
     });
@@ -850,12 +854,20 @@ async function main() {
         usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST, //Use on GPU, copy from CPU, uniform values
     });
     
+    const eyePosUSize = 4 * 3; //vec3 floats
+    const uniformBufferEye = device.createBuffer({
+        label: 'uniform eye Position buffer',
+        size: eyePosUSize,
+        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST, //Use on GPU, copy from CPU, uniform values
+    });
+    
     const bindGroupRendering = device.createBindGroup({
         label: 'bind group rendering: viewProjection',
         layout: pipeline.getBindGroupLayout(0),
         entries: [
             { binding: 0, resource: { buffer: heightBuffer}},
             { binding: 1, resource: { buffer: uniformBufferRender }},
+            { binding: 2, resource: { buffer: uniformBufferEye }},
         ],
     });
 
@@ -1018,9 +1030,12 @@ async function main() {
         1000,   // zFar
     );
 
-    const cameraMatrix = mat4.rotationY(degToRad(90));
-    mat4.translate(cameraMatrix, [0.0, 3, 49], cameraMatrix);
+    let eyePos = new Float32Array([0, 3, 50]);
+    const a = mat4.rotationY(degToRad(0));
+    const b = mat4.translate(mat4.identity(), eyePos);
+    const cameraMatrix = mat4.multiply(a,b);
     const viewMatrix = mat4.inverse(cameraMatrix);
+    device.queue.writeBuffer(uniformBufferEye, 0, eyePos);
 
      // combine the view and projection matrixes
     const viewProjectionMatrix = mat4.multiply(projection, viewMatrix);
@@ -1054,7 +1069,7 @@ async function main() {
         let t = (diff[0] * planeNormal[0] + diff[1] * planeNormal[1] + diff[2]  * planeNormal[2]) / denom;
         if (t < 0) return null;
 
-        return new Float32Array([rayDir[0] * t + rayOrigin[0], rayDir[1]*t - rayOrigin[1],rayDir[2]*t - rayOrigin[2]]);
+        return new Float32Array([rayDir[0] * t + rayOrigin[0], rayDir[1]*t + rayOrigin[1],rayDir[2]*t + rayOrigin[2]]);
     }
 
     canvas.addEventListener("mousemove", (event) => {

@@ -7,7 +7,7 @@ async function main() {
     resizeCanvas();
 
     if (!device) {
-      fail('It seems your web browser doesn\'t support WebGPU :( \n \
+      fail('It seems WebGPU isn\'t enabled on your browser or your GPu doesn\'t support it :( \n \
             Some features in my portfolio won\'t be available.');
       resizeCanvas();
       return;
@@ -287,6 +287,9 @@ main();
     });
     
     document.getElementById('resume-link').addEventListener('click', function () {
+        scrollTo('#resume');
+    });
+    document.getElementById('resume-link2').addEventListener('click', function () {
         scrollTo('#resume');
     });
     

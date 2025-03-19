@@ -35,7 +35,7 @@ async function main() {
 	const adapter = await navigator.gpu?.requestAdapter();
 	const device = await adapter?.requestDevice();
 	if (!device) {
-		fail('It seems your web browser doesn\'t support WebGPU :( \n \
+		fail('It seems WebGPU isn\'t enabled on your browser or your GPu doesn\'t support it :( \n \
 					Some features in my portfolio won\'t be available.');
 		resizeCanvas();
 		return;

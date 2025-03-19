@@ -7,23 +7,56 @@
         <!-- <link rel="shortcut icon" href="favicon.ico"> To add-->
         <link rel="stylesheet" href="particles.css">
         <script src="particles.js" type="text/javascript" defer></script>
+        <style>
+            body {
+                cursor: default; /* Normal cursor outside */
+            }
+            .custom-cursor {
+                position: fixed;
+                width: 30px;
+                height: 30px;
+                background-color: white;
+                border-radius: 50%;
+                pointer-events: none; /* Don't block interactions */
+                transform: translate(-50%, -50%);
+                opacity: 0; /* Initially hidden */
+            }
+            .cursor-active {
+                opacity: 0.3; /* Show only on canvas */
+            }
+            </style>
     </head>
     <body>
         <header>
             <canvas id="main-canvas" class="main-canvas" height="3000px"> <!-- oversized initial height so we don't get ugly pop-in -->
             </canvas>
+            <div class="custom-cursor"></div>
+            <script>
+                const canvas = document.getElementById("main-canvas");
+                const cursor = document.querySelector(".custom-cursor");
+                document.addEventListener("mousemove", (event) => {
+                           cursor.style.left = `${event.clientX}px`;
+                           cursor.style.top = `${event.clientY}px`;
+                       });
+
+                       canvas.addEventListener("mouseenter", () => {
+                           document.body.style.cursor = "none";  // Hide default cursor
+                           cursor.classList.add("cursor-active");
+                       });
+
+                       canvas.addEventListener("mouseleave", () => {
+                           document.body.style.cursor = "default";  // Restore normal cursor
+                           cursor.classList.remove("cursor-active");
+                       });
+            </script>
             <nav>
                 <ul>
                     <li><h1><a href="">Particles Renderer</a></h1></li>
-                    <li><p><a id="about-link" href="#about">About This Project</a></p></li>
                     <li><p><a id="projects-link" href="../../index.html">Back To Homepage</a></p></li>
+                    <li><p><a id="about-link" href="https://github.com/ElDanee/eldanee.github.io/tree/main/projects/particleRenderer">Github</a></p></li>
                 </ul>
             </nav>
         </header>
-            <section>
-                <h2 id="about">About</h2>
-                <p></p>
-            </section>
     </body>
 </html>
 
